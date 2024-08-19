@@ -1,0 +1,1015 @@
+# from flask_restful import Resource, Api
+# from datetime import datetime, date
+# from flask import make_response, jsonify, Blueprint, request, abort
+# from werkzeug.security import generate_password_hash
+# from flask_jwt_extended import jwt_required, get_jwt
+# from ..models import db, Section, Book, User, RequestedBooks, IssuedBooks, ReturnedBooks
+# # from ..db import db
+
+# # api = Api(prefix='/api')
+
+# #-----------------------SECTIONS API-----------------------#
+
+# sections_bp = Blueprint(
+#     'sections',
+#     __name__
+# )
+
+# @sections_bp.get('/sections')
+# @jwt_required()
+# def get_sections():
+#     # claims = get_jwt()
+#     # if claims.get('is_staff') == True:
+#     sections = Section.query.all()
+#     data = [section.to_dict() for section in sections]
+#     return make_response(data, 200)
+#     # return jsonify({"message":"User not authorized"}), 401
+
+# @sections_bp.post('/sections')
+# @jwt_required()
+# def post_sections():
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         args = request.get_json()
+#         name = args.get("name", None)
+#         description = args.get("description", None)
+        
+#         if name:
+#             ex_name = Section.query.filter_by(name=args['name']).first()
+#             if (len(args['name']) == 0):
+#                 return jsonify({"message":"Section name cannot be empty."}), 404
+#             elif ex_name:
+#                 return jsonify({"message":"Section with this name exists in the database. Choose another name."}), 409
+#         else:
+#             return jsonify({"message":"Section name is a mandatory field."}), 404
+        
+#         if description:
+#             if (len(args['description']) == 0):
+#                 return jsonify({"message":"Section description cannot be empty."}), 404
+#         else:
+#             return jsonify({"message":"Section description is a mandatory field."}), 404
+        
+        
+#         new_section = Section(
+#             name = args['name'],
+#             description = args['description'],
+#             date_created = datetime.now()
+#         )
+#         db.session.add(new_section)
+#         db.session.commit()
+#         return make_response(new_section.to_dict(), 201)
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+
+# @sections_bp.patch('/edit_sections/<int:id>')
+# @jwt_required()
+# def patch_sections(id):
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         args = request.get_json()
+#         edit_section = Section.query.filter_by(s_id=id).first()
+#         if not edit_section:
+#             return jsonify({"message":"Section with this ID does not exist."}), 404
+#         else:
+#             updated = False
+#             name = args.get("name")
+#             date_created = args.get("date_created", None)
+#             description = args.get("description")
+#             # bookID_link = args.get("bookID_link")
+            
+#             if name and (name != edit_section.name):
+#                     sname = Section.query.filter_by(name = args['name']).first()
+#                     if sname:
+#                         return jsonify({"message":"Section with this name exists in the database. Name must be unique."}), 404
+#                     else:
+#                         if len(name) > 0:
+#                             edit_section.name = args['name']
+#                             updated = True
+#                         else:
+#                             return jsonify({"message":"Section name cannot be empty."}), 400
+                        
+#             if date_created is not None:
+#                 return jsonify({"message":"Date created cannot be edited."}), 404
+            
+#             if description and (description != edit_section.description):
+#                 if len(description) > 0:
+#                     edit_section.description = args['description']
+#                     updated = True
+#                 else:
+#                     return jsonify({"message":"Section description cannot be empty."}), 404
+            
+#             if updated:
+#                 db.session.commit()
+#                 return jsonify({"message": "Section updated successfully."}), 200
+#             else:
+#                 return jsonify({"message": "No updates were made. Please provide new values."}), 400
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+
+# # @sections_bp.patch('/edit_sections/<int:id>')
+# # @jwt_required()
+# # def patch_sections(id):
+# #     claims = get_jwt()
+# #     if claims.get('is_staff') == True:
+# #         args = request.get_json()
+# #         edit_section = Section.query.filter_by(s_id=id).first()
+# #         if not edit_section:
+# #             return jsonify({"message":"Section with this ID does not exist."}), 404
+# #         else:
+# #             name = args.get("name", None)
+# #             date_created = args.get("date_created", None)
+# #             description = args.get("description", None)
+# #             bookID_link = args.get("bookID_link", None)
+# #             if name:
+# #                     sname = Section.query.filter_by(name = args['name']).first()
+# #                     if sname:
+# #                         return jsonify({"message":"Section with this name exists in the database. Name must be unique."}), 404
+# #                     else:
+# #                         edit_section.name = args['name']
+# #             elif date_created is not None:
+# #                 return jsonify({"message":"Date created cannot be edited."}), 404
+# #             elif description:
+# #                 sect = Section.query.filter_by(s_id=id).first()
+# #                 if args['description'] == sect.description:
+# #                     return jsonify({"message":"Section description is already the same."}), 404
+# #                 else:
+# #                     if len(args['description']) > 0:
+# #                         edit_section.description = args['description']
+# #                     else:
+# #                         return jsonify({"message":"Section description cannot be empty."}), 404
+# #             else:
+# #                 return jsonify({"message":"No data provided."}), 404
+# #             db.session.commit()
+            
+# #             sections = Section.query.all()
+# #             data = [section.to_dict() for section in sections]
+# #             return make_response(data, 200)
+# #     else:
+# #         return jsonify({"message":"User not authorized"}), 401
+
+# @sections_bp.delete('/edit_sections/<int:id>')
+# @jwt_required()
+# def delete_section(id):
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         delete_section = Section.query.filter_by(s_id=id).first()
+#         if not delete_section:
+#             return jsonify({"message":"Section with this ID does not exist."}), 404
+#         books = Book.query.filter_by(sectionID_link = id).all()
+#         for book in books:    
+#             db.session.delete(book)
+#         db.session.delete(delete_section)
+#         db.session.commit()
+#         return jsonify({"message":"Section deleted."}), 200
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+    
+# # /api/sections/${sectionId}/books
+# @sections_bp.get('/sections/<int:id>/books')
+# @jwt_required()
+# def section_books(id):
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         sectionID = Section.query.filter_by(s_id=id).first()
+#         if sectionID:
+#             books = Book.query.filter_by(sectionID_link = id)
+#             data = [book.to_dict() for book in books]
+#             # if len(data) == 0:
+#             #     return jsonify({"message":"Section with this ID has no books."}), 204
+#             return make_response(data, 200)
+#         return jsonify({"message":"Section with this ID does not exist"}), 404   
+#     return jsonify({"message":"User not authorized"}), 401
+    
+# #-----------------------BOOKS API-----------------------#
+
+# books_bp = Blueprint(
+#     'books',
+#     __name__
+# )
+
+# @books_bp.get('/books')
+# # @jwt_required()
+# def get_books():
+#     # claims = get_jwt()
+#     # if claims.get('is_staff') == True:
+#     books = Book.query.all()
+#     data = [book.to_dict() for book in books]
+#     return make_response(data, 200)
+#     # return jsonify({"message":"User not authorized"}), 401
+
+# @books_bp.post('/books') 
+# @jwt_required()
+# def post_books():
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         args = request.get_json()
+#         book_name = args.get("book_name", None)
+#         content = args.get("content", None)
+#         authors = args.get("authors", None)
+#         sectionID_link = args.get("sectionID_link", None)
+#         requested = args.get("requested", None)
+        
+#         if book_name:
+#             name = Book.query.filter_by(book_name=args['book_name']).first()
+#             if name:
+#                 return jsonify({"message":"Book with this name already exists in database. Name must be unique"}), 409
+#             elif len(args['book_name']) == 0:
+#                 return jsonify({"message":"book_name cannot be an empty string."}), 404
+#         else:
+#             return jsonify({"message":"book_name is required."}), 404
+        
+#         if content:
+#             if len(args['content']) == 0:
+#                 return jsonify({"message":"content cannot be an empty string."}), 404
+#         else:
+#             return jsonify({"message":"content is required."}), 404
+        
+#         if authors:
+#             if len(args['authors']) == 0:
+#                 return jsonify({"message":"authors cannot be an empty string."}), 404
+#         else:
+#             return jsonify({"message":"authors are required."}), 404
+        
+#         if sectionID_link:
+#             sectionID = Section.query.filter_by(s_id = args["sectionID_link"]).first()
+#             if not sectionID:
+#                 return jsonify({"message":"Section with this ID does not exist."}), 404
+#         else:
+#             return jsonify({"message":"sectionID_link is required."}), 404
+        
+#         if requested:
+#             requested = bool(False)
+        
+#         new_book = Book(
+#             book_name = args['book_name'],
+#             content = args['content'],
+#             authors = args['authors'],
+#             sectionID_link = args['sectionID_link'],
+#             requested = requested
+#         )
+#         db.session.add(new_book)
+#         db.session.commit()
+#         return make_response(new_book.to_dict(), 201)
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+    
+# # def post_books():
+# #     claims = get_jwt()
+# #     if claims.get('is_staff') == True:
+# #         args = request.get_json()
+# #         name = Book.query.filter_by(book_name=args['book_name']).first()
+# #         if not name: 
+# #             if args['book_name'] is None or (len(args['book_name']) == 0):
+# #                 return jsonify({"message":"Book name is required."}), 404
+# #             elif args['content'] is None or (len(args['content']) == 0):
+# #                 return jsonify({"message":"Book content is required."}), 404
+# #             elif args['authors'] is None or (len(args['authors']) == 0):
+# #                 return jsonify({"message":"Book author/s is/are required."}), 404
+# #             elif args['sectionID_link'] is None:
+# #                 return jsonify({"message":"Book genre id is required."}), 404
+# #             else:
+# #                 sectionID = Section.query.filter_by(s_id = args["sectionID_link"]).first()
+# #                 if not sectionID:
+# #                     return jsonify({"message":"Section with this ID does not exist."}), 404
+# #                 else:
+# #                     new_book = Book(
+# #                         book_name = args['book_name'],
+# #                         content = args['content'],
+# #                         authors = args['authors'],
+# #                         sectionID_link = args['sectionID_link']
+# #                     )
+# #                     db.session.add(new_book)
+# #                     db.session.commit()
+# #                     return make_response(new_book.to_dict(), 201)
+# #         else:
+# #             return jsonify({"message":"Book with this name exists in the database. Choose another name."}), 409
+# #             # abort(409, message="Section with this name exists in the database. Choose another name.")
+# #     else:
+# #         return jsonify({"message":"User not authorized"}), 401
+
+
+# @books_bp.patch('/edit_books/<int:id>')
+# @jwt_required()
+# def patch_books(id):
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         args = request.get_json()
+#         edit_book = Book.query.filter_by(b_id=id).first()
+#         if not edit_book:
+#             return jsonify({"message":"Book with this ID does not exist."}), 404
+#         else:
+#             updated = False
+#             book_name = args.get("book_name")
+#             content = args.get("content")
+#             authors = args.get("authors")
+#             sectionID_link = args.get("sectionID_link")
+#             avgRating = args.get("avgRating")
+#             requested = args.get("requested")
+#             if book_name and (book_name != edit_book.book_name):
+#                 if len(book_name) > 0:
+#                     edit_book.book_name = book_name
+#                     updated = True
+#                 else:
+#                     return jsonify({"message":"Book name cannot be empty."}), 400
+            
+#             if content and content != edit_book.content:
+#                 if len(content) > 0:
+#                     edit_book.content = content
+#                     updated = True
+#                 else:
+#                     return jsonify({"message":"Book content cannot be empty."}), 400
+
+#             if authors and authors != edit_book.authors:
+#                 if len(authors) > 0:
+#                     edit_book.authors = authors
+#                     updated = True
+#                 else:
+#                     return jsonify({"message":"Book authors must be specified."}), 400
+
+#             if sectionID_link and sectionID_link != edit_book.sectionID_link:
+#                 sectionID = Section.query.filter_by(s_id = args["sectionID_link"]).first()
+#                 if not sectionID:
+#                     return jsonify({"message":"Section with this ID does not exist."}), 404
+#                 if len(sectionID_link) > 0:
+#                     edit_book.sectionID_link = sectionID_link
+#                     updated = True
+#                 else:
+#                     return jsonify({"message":"Book sectionID must be specified."}), 400
+
+#             if avgRating:
+#                 return jsonify({"message":"Cannot edit average rating. It is calculated based on past ratings by students."}), 404
+#             # else:
+#             #     return jsonify({"message":"No data provided."}), 404
+
+#             if requested:
+#                 edit_book.requested = bool(False)
+#                 updated = True
+            
+#             if updated:
+#                 db.session.commit()
+#                 return jsonify({"message": "Book updated successfully."}), 200
+#             else:
+#                 return jsonify({"message": "No updates were made. Please provide new values."}), 400
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+
+
+# # @books_bp.patch('/edit_books/<int:id>')
+# # @jwt_required()
+# # def patch_books(id):
+# #     claims = get_jwt()
+# #     if claims.get('is_staff') == True:
+# #         args = request.get_json()
+# #         edit_book = Book.query.filter_by(b_id=id).first()
+# #         if not edit_book:
+# #             return jsonify({"message":"Book with this ID does not exist."}), 404
+# #         else:
+# #             book_name = args.get("book_name", None)
+# #             content = args.get("content", None)
+# #             authors = args.get("authors", None)
+# #             sectionID_link = args.get("sectionID_link", None)
+# #             avgRating = args.get("avgRating", None)
+# #             if book_name:
+# #                 if book_name == edit_book.book_name:
+# #                     return jsonify({"message":"Book name is same as suggested edit. Consider alternative name."}), 409
+# #                 elif len(args['book_name']) > 0:
+# #                     edit_book.book_name = args['book_name']
+# #                 else:
+# #                     return jsonify({"message":"Book content cannot be empty."}), 404
+# #             elif content:
+# #                 if content == edit_book.content:
+# #                     return jsonify({"message":"Book content is same as suggested edit. Consider alternative content."}), 409
+# #                 elif len(args['content']) > 0:
+# #                     edit_book.content = args['content']
+# #                 else:
+# #                     return jsonify({"message":"Book content cannot be empty."}), 404
+# #             elif authors:
+# #                 if authors == edit_book.authors:
+# #                     return jsonify({"message":"Book authors are same as suggested edit. Consider alternative authors."}), 409
+# #                 elif len(args['authors']) > 0:
+# #                     edit_book.authors = args['authors']
+# #                 else:
+# #                     return jsonify({"message":"Book authors must be specified."}), 404
+# #             elif sectionID_link:
+# #                     sectionID = Section.query.filter_by(s_id = args["sectionID_link"]).first()
+# #                     if not sectionID:
+# #                         return jsonify({"message":"Section with this ID does not exist."}), 404
+# #                     elif sectionID_link == sectionID:
+# #                         return jsonify({"message":"Section ID is same as suggested edit. Consider alternative ID."}), 409
+# #                     else:
+# #                         edit_book.sectionID_link = args['sectionID_link']
+# #             elif avgRating:
+# #                 return jsonify({"message":"Cannot edit average rating. It is calculated based on past ratings by students."}), 404
+# #             else:
+# #                 return jsonify({"message":"No data provided."}), 404
+            
+# #             db.session.commit()
+# #             books = Book.query.all()
+# #             data = [book.to_dict() for book in books]
+# #             return make_response(data, 200)
+# #     else:
+# #         return jsonify({"message":"User not authorized"}), 401
+    
+# @books_bp.delete('/edit_books/<int:id>')
+# @jwt_required()
+# def delete_book(id):
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         delete_book = Book.query.filter_by(b_id = id).first()
+#         if not delete_book:
+#             return jsonify({"message":"Book with this ID does not exist."}), 404
+#         db.session.delete(delete_book)
+#         db.session.commit()
+#         return jsonify({"message":"Book deleted."}), 200
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+    
+
+# #-----------------------User API-----------------------#
+
+# users_bp = Blueprint(
+#     'users',
+#     __name__
+# )
+
+# @users_bp.get('/users')
+# @jwt_required()
+# def get_users():
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         users = User.query.all()
+#         data = [user.to_dict() for user in users]
+#         return make_response(data, 200)
+#     return jsonify({"message":"User not authorized"}), 401
+
+# @users_bp.post('/users')
+# @jwt_required()
+# def post_users():
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         args = request.get_json()
+#         username = args.get("username", None)
+#         password = args.get("password", None)
+#         if username:
+#             if User.query.filter_by(username=args['username']).first():
+#                 return jsonify({"message":"This username exists in the database. Choose another."}), 409
+#             elif len(args['username']) == 0:
+#                 return jsonify({"message":"username cannot be an empty string."}), 404
+#         else:
+#             return jsonify({"message":"username is required."}), 404
+        
+#         if password:
+#             if len(args['password']) == 0:
+#                 return jsonify({"message":"password cannot be an empty string."}), 404
+#         else:
+#             return jsonify({"message":"password is required."}), 404
+
+#         # user = User.query.filter_by(username=args['username']).first()
+#         # if not user:
+            
+#         #     if args['username'] is None or (len(args['username']) == 0):
+#         #         return jsonify({"message":"Username field cannot be empty."}), 404
+                
+#         #     elif args['password'] is None or (len(args['password']) == 0):
+#         #         return jsonify({"message":"User password is required and must atleast be a character."}), 404
+#         #     else:
+
+#         new_user = User(
+#             username = args['username'],
+#             password = generate_password_hash(args['password']),
+#             role = "Student"
+#         )
+        
+#         db.session.add(new_user)
+#         db.session.commit()
+#         return make_response(new_user.to_dict(), 201)
+            
+#         # else:
+#         #     return jsonify({"message":"This username exists in the database. Choose another."}), 409
+#             # abort(409, message="Section with this name exists in the database. Choose another name.")
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+    
+# @users_bp.patch('/edit_users/<int:id>')
+# @jwt_required()
+# def patch_users(id):
+#     if id == 1:
+#         return jsonify({"message":"Cannot edit user with this ID."}), 404
+    
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         args = request.get_json()
+#         edit_user = User.query.filter_by(id=id).first()
+#         if not edit_user:
+#             return jsonify({"message":"User with this ID does not exist."}), 404
+#         else:
+#             #["id", "username", "password", "role"]
+#             username = args.get("username", None)
+#             password = args.get("password", None)
+#             role = args.get("role", None)
+#             if username:
+#                     uname = User.query.filter_by(username = args['username']).first()
+#                     if uname:
+#                         return jsonify({"message":"User with this username exists in the database. Username must be unique."}), 404
+#                     elif username == edit_user.username:
+#                         return jsonify({"message":"Username is same as suggested edit. Consider alternative username."}), 409
+#                     else:
+#                         edit_user.username = args['username']
+#             elif password:
+#                     if len(args['password']) > 0:
+#                         edit_user.password = generate_password_hash(args['password'])
+#                     else:
+#                         return jsonify({"message":"User password is required and must atleast be a character."}), 404
+#             elif role:
+#                 edit_user.role = "Student"
+#             else:
+#                 return jsonify({"message":"No data provided."}), 404
+            
+#             db.session.commit()
+#             return make_response(edit_user.to_dict(), 201)
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+
+
+# @users_bp.delete('/edit_users/<int:id>')
+# @jwt_required()
+# def delete_users(id):
+#     if id == 1:
+#         return jsonify({"message":"Cannot delete user with this ID."}), 404
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         delete_user = User.query.filter_by(id = id).first()
+#         if not delete_user:
+#             return jsonify({"message":"User with this ID does not exist."}), 404
+#         db.session.delete(delete_user)
+#         db.session.commit()
+#         return jsonify({"message":"User deleted."}), 200
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+    
+# #-----------------------RequestedBooks API-----------------------#
+
+# requestedBooks_bp = Blueprint(
+#     'requestedbooks',
+#     __name__
+# )
+
+# @requestedBooks_bp.get('/requestedbooks')
+# @jwt_required()
+# def get_requestedbooks():
+#     # claims = get_jwt()
+#     # if claims.get('is_staff') == True:
+#     requestedBks = RequestedBooks.query.all()
+#     data = [requestBk.to_dict() for requestBk in requestedBks]
+#     return make_response(data, 200)
+#     # return jsonify({"message":"User not authorized"}), 401
+
+# @requestedBooks_bp.post('/requestedbooks')
+# @jwt_required()
+# def post_requestedbooks():
+#     # claims = get_jwt()
+#     # if claims.get('is_staff') == True:
+#     args = request.get_json()
+#     if args['student_username']:
+#         check_name = User.query.filter_by(username = args['student_username']).first()
+        
+#         if not check_name:
+#             return jsonify({"message":"Username must exist in the database."}), 409
+#     else:
+#         return jsonify({"message":"Username field cannot be empty."}), 404
+    
+#     if args['book_id']:
+#         id = Book.query.filter_by(b_id = args['book_id']).first()
+#         if not id:
+#             return jsonify({"message":"Book with this id must exist in the database."}), 409
+#     else:
+#         return jsonify({"message":"Book id is required."}), 404
+
+#     # approved = args.get("approved", None)
+#     # if args['approved']:
+#     #     approved = bool(False)
+    
+#     # if args['issued_on']:
+#     #     today = datetime.today()
+#     #     if datetime.strptime(args['issued_on'], "%Y-%m-%d") > today:
+#     #         return jsonify({"message":"Date of issue cannot be in the future."}), 404      
+            
+#     new_Request = RequestedBooks(
+#         student_username = args['student_username'],
+#         book_id = args['book_id'],
+#         approved = args['approved']
+#         # issued_on = datetime.strptime(args['issued_on'], "%Y-%m-%d")
+#     )
+
+#     # #Avoid entry duplication
+#     # issues = IssuedBooks.query.all()
+#     # for i in issues:
+#     #     if new_Issue.username == i.username and new_Issue.book_name == i.book_name and new_Issue.issue_date == i.issue_date:
+#     #         return jsonify({"message":"This entry already exists in the database. Recheck details."}), 409
+    
+#     db.session.add(new_Request)
+#     db.session.commit()
+#     return make_response(new_Request.to_dict(), 201)        
+#     # else:
+#     #     return jsonify({"message":"User not authorized"}), 401
+
+# @requestedBooks_bp.patch('/edit_requestedbooks/<int:id>')
+# @jwt_required()
+# def patch_requestedbooks(id):
+#     # claims = get_jwt()
+#     # if claims.get('is_staff') == True:
+#     args = request.get_json()
+#     edit_requestbook = RequestedBooks.query.filter_by(request_id = id).first()
+#     if not edit_requestbook:
+#         return jsonify({"message":"Book request with this ID does not exist."}), 404
+#     else:
+#         updated = False
+#         student_username = args.get("student_username")
+#         book_id = args.get("book_id")
+#         approved = args.get("approved")
+#         # issued_on = args.get("issued_on", None)
+#         if student_username and (student_username != edit_requestbook.student_username):
+#             check_name = User.query.filter_by(username = args["student_username"]).first()
+#             if not check_name:
+#                 return jsonify({"message":"Username does not exist."}), 404
+#             if len(student_username) > 0:
+#                 edit_requestbook.student_username = student_username
+#                 updated = True
+#             else:
+#                 return jsonify({"message":"Student username cannot be empty."}), 400
+        
+#         if book_id and book_id != edit_requestbook.book_id:
+#             bk_id = Book.query.filter_by(b_id = args["book_id"]).first()
+#             if not bk_id:
+#                 return jsonify({"message":"Book with this ID does not exist."}), 404
+            
+#             edit_requestbook.book_id = book_id
+#             updated = True
+#         # else:
+#         #     return jsonify({"message":"Book id cannot be empty."}), 400
+            
+#         if approved:
+#             # edit_requestbook.approved = bool(False)
+#             edit_requestbook.approved = bool(args.get("approved"))
+#             #Add to IssuedBooks if approved
+#             # remove_issued_book = IssuedBooks.query.filter_by(issue_id = args['issue_ID']).first()
+#             # db.session.delete(remove_issued_book)
+#             # db.session.commit()
+#             updated = True
+#         else:
+#             edit_requestbook.approved = bool(args.get("approved"))
+#             updated = True
+        
+#         # if issued_on:
+#         #     today = datetime.today()
+#         #     if datetime.strptime(args['issued_on'], "%Y-%m-%d") > today:
+#         #         return jsonify({"message":"Date of issue cannot be in the future."}), 404
+#         #     else:
+#         #         edit_requestbook.issued_on = datetime.strptime(args['issued_on'], "%Y-%m-%d")
+#         #         updated = True
+
+#         if updated:
+#             db.session.commit()
+#             return jsonify({"message": "Book request updated successfully."}), 200
+#         else:
+#             return jsonify({"message": "No updates were made. Please provide new values."}), 204
+#     # else:
+#     #     return jsonify({"message":"User not authorized"}), 401
+
+# @requestedBooks_bp.delete('/edit_requestedbooks/<int:id>')
+# @jwt_required()
+# def delete_requestedbooks(id):
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         delete_request = RequestedBooks.query.filter_by(request_id = id).first()
+#         if not delete_request:
+#             return jsonify({"message":"No books request made with this ID."}), 404
+#         db.session.delete(delete_request)
+#         db.session.commit()
+#         return jsonify({"message":"Book request with this ID is deleted."}), 200
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+    
+# #-----------------------IssuedBooks API-----------------------#
+
+# issuedBooks_bp = Blueprint(
+#     'issuedbooks',
+#     __name__
+# )
+
+# @issuedBooks_bp.get('/issuedbooks')
+# @jwt_required()
+# def get_issuedbooks():
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         issuedBks = IssuedBooks.query.all()
+#         data = [issuedBk.to_dict() for issuedBk in issuedBks]
+#         return make_response(data, 200)
+#     return jsonify({"message":"User not authorized"}), 401
+
+# # def valid_date(s):
+# #     return datetime.strptime(s, "%Y-%m-%d")
+
+# @issuedBooks_bp.post('/issuedbooks')
+# @jwt_required()
+# def post_issuedbooks():
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         args = request.get_json()
+#         if args['username']:
+#             check_name = User.query.filter_by(username = args['username']).first()
+            
+#             if not check_name:
+#                 return jsonify({"message":"Username must exist in the database."}), 409
+#         else:
+#             return jsonify({"message":"Username field cannot be empty."}), 404
+        
+#         if args['book_name']:
+#             name = Book.query.filter_by(book_name = args['book_name']).first()
+#             if not name:
+#                 return jsonify({"message":"Book with this name must exist in the database."}), 409
+#         else:
+#             return jsonify({"message":"Book name is required."}), 404
+
+#         if args['issue_date']:
+#             today = datetime.today()
+#             if datetime.strptime(args['issue_date'], "%Y-%m-%d") > today:
+#                 return jsonify({"message":"Issue date cannot be in the future."}), 404
+#         else:
+#             return jsonify({"message":"Book issue date is required."}), 404
+
+        
+#         # username = IssuedBooks.query.filter_by(username = args['username']).first() 
+#         # if username:
+#         #     book_name = IssuedBooks.query.filter_by(book_name = args['book_name']).first() 
+#         #     if book_name:
+#         #         return jsonify({"message":"This entry already exists in the database. Recheck details."}), 409
+#         # username = IssuedBooks.query.filter_by(username = args['username']).first() 
+#         # if username:
+#         #     book_name = IssuedBooks.query.filter_by(book_name = args['book_name']).first() 
+#         #     if book_name:
+#         #         issued_date = datetime.strptime(args['issue_date'], "%Y-%m-%d")
+#         #         issued = IssuedBooks.query.filter_by(issue_date = issued_date).first()
+#         #         if issued:
+#         #             return jsonify({"message":"This entry already exists in the database. Recheck details."}), 409
+                
+#         new_Issue = IssuedBooks(
+#             username = args['username'],
+#             book_name = args['book_name'],
+#             issue_date = datetime.strptime(args['issue_date'], "%Y-%m-%d")
+#         )
+        
+#         #Avoid entry duplication
+#         issues = IssuedBooks.query.all()
+#         for i in issues:
+#             if new_Issue.username == i.username and new_Issue.book_name == i.book_name and new_Issue.issue_date == i.issue_date:
+#                 return jsonify({"message":"This entry already exists in the database. Recheck details."}), 409
+        
+#         db.session.add(new_Issue)
+#         db.session.commit()
+#         return make_response(new_Issue.to_dict(), 201)        
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+
+
+# @issuedBooks_bp.patch('/edit_issuedbooks/<int:id>')
+# @jwt_required()
+# def patch_issuedbooks(id):
+#     #["issue_id", "username", "book_name", "issue_date"]
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         args = request.get_json()
+#         edit_issue = IssuedBooks.query.filter_by(issue_id = id).first()
+#         if not edit_issue:
+#             return jsonify({"message":"No book issued with this ID."}), 404
+#         else:
+            
+#             username = args.get("username", None)
+#             book_name = args.get("book_name", None)
+#             issue_date = args.get("issue_date", None)
+
+#             if username:
+#                     uname = User.query.filter_by(username = args['username']).first()
+#                     if uname:
+#                         # #Avoid duplication
+#                         # issued_book = edit_issue.book_name
+#                         # # book_name = IssuedBooks.query.filter_by(book_name = issued_book).first()
+#                         # book_name = IssuedBooks.query.filter_by(book_name = issued_book).first()
+#                         # if book_name: 
+#                         #     issued_date = edit_issue.issue_date
+#                         #     issued = IssuedBooks.query.filter_by(issue_date = issued_date).first()
+#                         #     if issued:
+#                         #         return jsonify({"message":"This entry already exists in the database. Recheck details."}), 409
+                            
+#                         edit_issue.username = args['username']
+#                     else:
+#                         return jsonify({"message":"Username does not exist."}), 404
+#             elif book_name:
+#                     book = Book.query.filter_by(book_name = args['book_name']).first()
+#                     if book:
+#                         # issued_user = edit_issue.username
+#                         # user = IssuedBooks.query.filter_by(username = issued_user).first()
+#                         # if user:
+#                         #     issued_date = edit_issue.issue_date
+#                         #     issued = IssuedBooks.query.filter_by(issue_date = issued_date).first()
+#                         #     if issued:
+#                         #         return jsonify({"message":"This entry already exists in the database. Recheck details."}), 409
+                        
+#                         edit_issue.book_name = args['book_name']
+#                     else:
+#                         return jsonify({"message":"Book does not exist in database."}), 404                        
+#             elif issue_date:
+#                 today = datetime.today()
+#                 if datetime.strptime(args['issue_date'], "%Y-%m-%d") > today:
+#                     return jsonify({"message":"Issue date cannot be in the future."}), 404
+#                 else:
+#                     edit_issue.issue_date = datetime.strptime(args['issue_date'], "%Y-%m-%d")
+#             else:
+#                 return jsonify({"message":"No data provided."}), 404
+            
+#             #Avoid entry duplication
+#             # issues = IssuedBooks.query.all()
+#             # for i in issues:
+#             #     if edit_issue.username == i.username and edit_issue.book_name == i.book_name and edit_issue.issue_date == i.issue_date:
+#             #         return jsonify({"message":"This entry already exists in the database. Recheck details."}), 409
+            
+#             db.session.commit()
+#             return make_response(edit_issue.to_dict(), 201)
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+
+# @issuedBooks_bp.delete('/edit_issuedbooks/<int:id>')
+# @jwt_required()
+# def delete_issuedbooks(id):
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         delete_issue = IssuedBooks.query.filter_by(issue_id = id).first()
+#         if not delete_issue:
+#             return jsonify({"message":"No books issued with this ID."}), 404
+#         db.session.delete(delete_issue)
+#         db.session.commit()
+#         return jsonify({"message":"Book issue deleted."}), 200
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+    
+
+# #-----------------------ReturnedBooks API-----------------------#
+    
+# returnedBooks_bp = Blueprint(
+#     'returnedbooks',
+#     __name__
+# )
+
+# @returnedBooks_bp.get('/returnedbooks')
+# @jwt_required()
+# def get_returnbooks():
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         returnbks = ReturnedBooks.query.all()
+#         data = [returnbk.to_dict() for returnbk in returnbks]
+#         return make_response(data, 200)
+#     return jsonify({"message":"User not authorized"}), 401
+
+# @returnedBooks_bp.post('/returnedbooks')
+# @jwt_required()
+# def post_returnbooks():
+#     #["return_id", "issue_ID", "return_date", "book_name", "rating"]
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+
+#         args = request.get_json()
+#         if args['issue_ID']:
+#                 returned = ReturnedBooks.query.filter_by(issue_ID = args['issue_ID']).first()
+#                 if returned:
+#                     return jsonify({"message":"Book issued with this ID has been returned."}), 404
+#                 else:
+#                     issued = IssuedBooks.query.filter_by(issue_id = args['issue_ID']).first()
+#                     # return user_email
+#                     if not issued:
+#                         return jsonify({"message":"No book issued with this id."}), 409
+#         else:
+#             return jsonify({"message":"Issue ID is required and should be linked to an issued book."}), 404
+        
+        
+#         if args['return_date']:
+#             today = datetime.today()
+#             if datetime.strptime(args['return_date'], "%Y-%m-%d") > today:
+#                 return jsonify({"message":"Return date cannot be in the future"}), 404
+#         else:
+#             return jsonify({"message":"Book return date is required."}), 404
+        
+#         if args['book_name']:
+#             return_book = Book.query.filter_by(book_name = args['book_name']).first()
+#             if not return_book:
+#                 return jsonify({"message":"No book issued with this name."}), 409
+#         else:
+#             return jsonify({"message":"Book name is required and should be in Books table."}), 404
+
+#         if args['rating']:
+#             if args['rating'] < 1:
+#                 rating = 1
+#             elif args['rating'] > 5.001:
+#                 rating = 5
+#             else:
+#                 rating = args['rating']
+#         else:
+#             return jsonify({"message":"Book rating by user is required."}), 404
+
+#         new_Return = ReturnedBooks(
+#             issue_ID = args['issue_ID'],
+#             return_date = datetime.strptime(args['return_date'], "%Y-%m-%d"),
+#             book_name = args['book_name'],
+#             rating = rating
+#         )
+#         db.session.add(new_Return)
+#         db.session.commit()
+        
+#         #Remove returned book from issued table
+#         remove_issued_book = IssuedBooks.query.filter_by(issue_id = args['issue_ID']).first()
+#         db.session.delete(remove_issued_book)
+#         db.session.commit()
+        
+#         return make_response(new_Return.to_dict(), 201) 
+    
+#     return jsonify({"message":"User not authorized"}), 401
+
+# @returnedBooks_bp.patch('/edit_returnedbooks/<int:id>')
+# @jwt_required()
+# def patch_returnbooks(id):
+#     #["return_id", "issue_ID", "return_date", "book_name", "rating"]
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         args = request.get_json()
+#         edit_return = ReturnedBooks.query.filter_by(return_id = id).first()
+#         if not edit_return:
+#             return jsonify({"message":"No book returned with this ID."}), 404
+#         else:
+            
+#             issue_ID = args.get("issue_ID", None)
+#             return_date = args.get("return_date", None)
+#             book_name = args.get("book_name", None)
+#             rating = args.get("rating", None)
+            
+#             if issue_ID:
+#                 issuedbooks = IssuedBooks.query.filter_by(issue_id = args['issue_ID']).first()
+#                 if issuedbooks:
+#                     edit_return.issue_ID = args['issue_ID']
+#                 else:
+#                     return jsonify({"message":"No book issued with this ID."}), 404
+
+#             elif return_date:
+#                 today = datetime.today()
+#                 if datetime.strptime(args['return_date'], "%Y-%m-%d") > today:
+#                     return jsonify({"message":"Return date cannot be in the future."}), 404
+#                 else:
+#                     #Check return date > issue date
+#                     #Check return date - issue date < 7 days
+#                     edit_return.return_date = datetime.strptime(args['return_date'], "%Y-%m-%d")
+
+#             elif book_name:
+#                     issued = IssuedBooks.query.filter_by(issue_id = edit_return.issue_ID).first()
+#                     edit_return.book_name = issued.book_name 
+#                     # book = Book.query.filter_by(book_name = args['book_name']).first()
+#                     # if book:
+#                     #     issued = IssuedBooks.query.filter_by(issue_id = edit_return.issue_ID).first()
+#                     #     edit_return.book_name = issued.book_name 
+#                     # else:
+#                     #     return jsonify({"message":"Book does not exist in database."}), 404                        
+            
+#             elif rating:
+#                 if args['rating'] < 1:
+#                     edit_return.rating = 1
+#                 elif args['rating'] > 5.001:
+#                     edit_return.rating = 5
+#                 else:
+#                     edit_return.rating = args['rating']
+
+#             else:
+#                 return jsonify({"message":"No data provided."}), 404
+            
+#             #Avoid entry duplication
+#             # issues = IssuedBooks.query.all()
+#             # for i in issues:
+#             #     if edit_issue.username == i.username and edit_issue.book_name == i.book_name and edit_issue.issue_date == i.issue_date:
+#             #         return jsonify({"message":"This entry already exists in the database. Recheck details."}), 409
+            
+#             db.session.commit()
+#             return make_response(edit_return.to_dict(), 201)
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
+
+# @returnedBooks_bp.delete('/edit_returnedbooks/<int:id>')
+# @jwt_required()
+# def delete_returnbooks(id):
+#     if id == 1:
+#         return jsonify({"message":"Cannot delete user with this ID."}), 404
+#     claims = get_jwt()
+#     if claims.get('is_staff') == True:
+#         delete_return = ReturnedBooks.query.filter_by(return_id = id).first()
+#         if not delete_return:
+#             return jsonify({"message":"No books returned with this ID."}), 404
+#         db.session.delete(delete_return)
+#         db.session.commit()
+#         return jsonify({"message":"Book return deleted."}), 200
+#     else:
+#         return jsonify({"message":"User not authorized"}), 401
